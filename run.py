@@ -1,11 +1,13 @@
 import os
 import glob
 import nibabel as nib
+import numpy as np
 from nipype.interfaces import fsl
 from utils import create_crude_LR_mask
 from utils import correct_chirality
 
-root_dir='/home/elisonj/shared/BCP/process/dcan_bibsnet/output_brainmasks/test'
+root_dir='/home/elisonj/shared/BCP/process/dcan_bibsnet/output_brainmasks'
+fsl_lut='/home/elisonj/shared/BCP/process/dcan_bibsnet/code/iterative-chirality-correction/FreeSurferColorLUT.txt'
 os.chdir(root_dir)
 
 subses=glob.glob('sub-*/ses-*')
@@ -16,6 +18,8 @@ for i in subses:
     sub=i.split('/')[0]
     ses=i.split('/')[1]
     sub_ses=sub+'_'+ses
+    
+    print('Performing iterative chirality correction on {i}')
 
     # Make work dir for anat_dilated2 to save intermediate output files in case it's helpful
     anat_dilated2_wd='anat_dilated2_work'
@@ -34,20 +38,19 @@ for i in subses:
 
     # Iteration 1: Perform chirality correction on the chirality corrected aseg image from postbibsnet using the crude LR mask
     crude_corrected_aseg=f'{anat_dilated2_wd}/crude_corr_aseg.nii.gz'
-    correct_chirality(cc_aseg_postBN, crude_mask, crude_corrected_aseg)
+    correct_chirality(cc_aseg_postBN, crude_mask, crude_corrected_aseg, fsl_lut)
 
     # Iteration 2: Perform chirality correction on the crudely corrected aseg using the original dilated LR mask
     orig_dil_LRmask=f'work/postbibsnet/{i}/lrmask_dil_wd/LRmask_dil.nii.gz'
     cc_aseg_iteration2=f'{anat_dilated2_wd}/cc_aseg_acpc.nii.gz'
-    correct_chirality(crude_corrected_aseg, orig_dil_LRmask, cc_aseg_iteration2)
+    correct_chirality(crude_corrected_aseg, orig_dil_LRmask, cc_aseg_iteration2, fsl_lut)
 
     # Transform final corrected aseg into native T1w space 
     ref_img=f'work/prebibsnet/{i}/averaged/{sub_ses}_0000.nii.gz'
     init=f'work/postbibsnet/{i}/chirality_correction/seg_reg_to_T1w_native.mat'
-    final_deriv_aseg=f'{anat_dilated2_deriv}/{sub_ses}_space-T1w_desc-aseg_dseg.nii.g'
+    final_deriv_aseg=f'{anat_dilated2_deriv}/{sub_ses}_space-T1w_desc-aseg_dseg.nii.gz'
 
 
     cmd=f'flirt -applyxfm -ref {ref_img} -in {cc_aseg_iteration2} -init {init} -o {final_deriv_aseg} -interp nearestneighbour'
-    print(cmd)
-    #os.system(cmd)
+    os.system(cmd)
 

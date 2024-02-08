@@ -1,5 +1,6 @@
 import os
 import glob
+import numpy as np
 import nibabel as nib
 from nipype.interfaces import fsl
 
@@ -38,8 +39,8 @@ def check_and_correct_region(should_be_left, region, segment_name_to_number, new
         flipped_id = segment_name_to_number[flipped_region]
         new_data[chirality][floor_ceiling][scanner_bore] = flipped_id
 
-def correct_chirality(nifti_input_file_path, left_right_mask_nifti_file, nifti_output_file_path):
-    free_surfer_label_to_region = get_id_to_region_mapping('FreeSurferColorLUT.txt')
+def correct_chirality(nifti_input_file_path, left_right_mask_nifti_file, nifti_output_file_path, fslLUT):
+    free_surfer_label_to_region = get_id_to_region_mapping(fslLUT)
     segment_name_to_number = {v: k for k, v in free_surfer_label_to_region.items()}
     img = nib.load(nifti_input_file_path)
     data = img.get_data()
@@ -81,7 +82,7 @@ def create_crude_LR_mask(input_aseg, out_crude_mask):
     modified_data[:midpoint_x, :, :][data[:midpoint_x, :, :] > 0] = 1
     modified_data[midpoint_x:, :, :][data[midpoint_x:, :, :] > 0] = 2
 
-    nib.save(img, seg_BIBSnet_outfiles[0])
+    nib.save(img, input_aseg)
     save_nifti(modified_data, affine, out_crude_mask)
 
     return out_crude_mask
