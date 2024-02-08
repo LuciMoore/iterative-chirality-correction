@@ -6,7 +6,7 @@ from nipype.interfaces import fsl
 from utils import create_crude_LR_mask
 from utils import correct_chirality
 
-root_dir='/home/elisonj/shared/BCP/process/dcan_bibsnet/output_brainmasks/test'
+root_dir='/home/elisonj/shared/BCP/process/dcan_bibsnet/output_brainmasks'
 fsl_lut='/home/elisonj/shared/BCP/process/dcan_bibsnet/code/iterative-chirality-correction/FreeSurferColorLUT.txt'
 os.chdir(root_dir)
 
@@ -34,24 +34,28 @@ for i in subses:
 
     # Split the chirality corrected acpc aseg image from postbibsnet into left and right to create a crude chirality correction mask 
     cc_aseg_postBN=f'{sub_root}/work/postbibsnet/{i}/chirality_correction/corrected_{sub_ses}_optimal_resized.nii.gz'
-    crude_mask=f'{anat_dilated2_wd}/crude_mask.nii.gz'
-    create_crude_LR_mask(cc_aseg_postBN, crude_mask)
+    
+    if os.path.exists(cc_aseg_postBN):
+        crude_mask=f'{anat_dilated2_wd}/crude_mask.nii.gz'
+        create_crude_LR_mask(cc_aseg_postBN, crude_mask)
 
-    # Iteration 1: Perform chirality correction on the chirality corrected aseg image from postbibsnet using the crude LR mask
-    crude_corrected_aseg=f'{anat_dilated2_wd}/crude_corr_aseg.nii.gz'
-    correct_chirality(cc_aseg_postBN, crude_mask, crude_corrected_aseg, fsl_lut)
+        # Iteration 1: Perform chirality correction on the chirality corrected aseg image from postbibsnet using the crude LR mask
+        crude_corrected_aseg=f'{anat_dilated2_wd}/crude_corr_aseg.nii.gz'
+        correct_chirality(cc_aseg_postBN, crude_mask, crude_corrected_aseg, fsl_lut)
 
-    # Iteration 2: Perform chirality correction on the crudely corrected aseg using the original dilated LR mask
-    orig_dil_LRmask=f'{sub_root}/work/postbibsnet/{i}/lrmask_dil_wd/LRmask_dil.nii.gz'
-    cc_aseg_iteration2=f'{anat_dilated2_wd}/cc_aseg_acpc.nii.gz'
-    correct_chirality(crude_corrected_aseg, orig_dil_LRmask, cc_aseg_iteration2, fsl_lut)
+        # Iteration 2: Perform chirality correction on the crudely corrected aseg using the original dilated LR mask
+        orig_dil_LRmask=f'{sub_root}/work/postbibsnet/{i}/lrmask_dil_wd/LRmask_dil.nii.gz'
+        cc_aseg_iteration2=f'{anat_dilated2_wd}/cc_aseg_acpc.nii.gz'
+        correct_chirality(crude_corrected_aseg, orig_dil_LRmask, cc_aseg_iteration2, fsl_lut)
 
-    # Transform final corrected aseg into native T1w space 
-    ref_img=f'{sub_root}/work/prebibsnet/{i}/averaged/{sub_ses}_0000.nii.gz'
-    init=f'{sub_root}/work/postbibsnet/{i}/chirality_correction/seg_reg_to_T1w_native.mat'
-    final_deriv_aseg=f'{anat_dilated2_deriv}/{sub_ses}_space-T1w_desc-aseg_dseg.nii.gz'
+        # Transform final corrected aseg into native T1w space 
+        ref_img=f'{sub_root}/work/prebibsnet/{i}/averaged/{sub_ses}_0000.nii.gz'
+        init=f'{sub_root}/work/postbibsnet/{i}/chirality_correction/seg_reg_to_T1w_native.mat'
+        final_deriv_aseg=f'{anat_dilated2_deriv}/{sub_ses}_space-T1w_desc-aseg_dseg.nii.gz'
 
-
-    cmd=f'flirt -applyxfm -ref {ref_img} -in {cc_aseg_iteration2} -init {init} -o {final_deriv_aseg} -interp nearestneighbour'
-    os.system(cmd)
+        cmd=f'flirt -applyxfm -ref {ref_img} -in {cc_aseg_iteration2} -init {init} -o {final_deriv_aseg} -interp nearestneighbour'
+        os.system(cmd)
+    
+    else:
+        print(f'Original corrected aseg missing: {cc_aseg_postBN}')
 

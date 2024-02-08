@@ -82,7 +82,6 @@ def create_crude_LR_mask(input_aseg, out_crude_mask):
     modified_data[:midpoint_x, :, :][data[:midpoint_x, :, :] > 0] = 1
     modified_data[midpoint_x:, :, :][data[midpoint_x:, :, :] > 0] = 2
 
-    nib.save(img, input_aseg)
     save_nifti(modified_data, affine, out_crude_mask)
 
     return out_crude_mask
