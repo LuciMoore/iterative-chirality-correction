@@ -1,8 +1,5 @@
-import os
-import glob
 import numpy as np
 import nibabel as nib
-from nipype.interfaces import fsl
 
 CHIRALITY_CONST = dict(UNKNOWN=0, LEFT=1, RIGHT=2, BILATERAL=3)
 LEFT = 'Left-'

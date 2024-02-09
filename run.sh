@@ -9,12 +9,12 @@ sbatch <<EOT
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 #SBATCH --mail-user=lmoore@umn.edu
-#SBATCH -e iterativeCC-%j.err
-#SBATCH -o iterativeCC-%j.out
+#SBATCH -e logs/iterativeCC-%j.err
+#SBATCH -o logs/iterativeCC-%j.out
 #SBATCH -A feczk001
 
 module load fsl
 
-python3 run.py
+python3 run.py /home/elisonj/shared/BCP/process/dcan_bibsnet/output_brainmasks
 
 EOT
