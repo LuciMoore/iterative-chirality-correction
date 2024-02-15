@@ -75,9 +75,9 @@ def create_crude_LR_mask(input_aseg, out_crude_mask):
     midpoint_x = data.shape[0] // 2
     modified_data = np.zeros_like(data)
     
-    # Assign value 1 to left-side voxels with values greater than 0 value 2 to right-side voxels with values greater than 0
-    modified_data[:midpoint_x, :, :][data[:midpoint_x, :, :] > 0] = 1
-    modified_data[midpoint_x:, :, :][data[midpoint_x:, :, :] > 0] = 2
+    # Assign value 2 to left-side voxels with values greater than 0 value 1 to right-side voxels with values greater than 0
+    modified_data[:midpoint_x, :, :][data[:midpoint_x, :, :] > 0] = 2
+    modified_data[midpoint_x:, :, :][data[midpoint_x:, :, :] > 0] = 1
 
     save_nifti(modified_data, affine, out_crude_mask)
 
